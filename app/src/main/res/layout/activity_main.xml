@@ -1,8 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".MainActivity" android:orientation="horizontal"/>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    tools:context=".MainActivity">
+
+    <ImageView
+        android:id="@+id/ivArrowUp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/ic_arrow_up" />
+
+    <ImageView
+        android:id="@+id/ivArrowRight"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:rotation="90"
+        android:src="@drawable/ic_arrow_up" />
+
+    <ImageView
+        android:id="@+id/ivArrowBottom"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:rotation="180"
+        android:src="@drawable/ic_arrow_up" />
+
+    <ImageView
+        android:id="@+id/ivArrowLeft"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:rotation="270"
+        android:src="@drawable/ic_arrow_up" />
+
+</LinearLayout>
