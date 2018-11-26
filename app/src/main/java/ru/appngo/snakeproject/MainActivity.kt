@@ -28,8 +28,5 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }).start()
-
-
-
     }
 }
