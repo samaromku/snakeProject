@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.LinearLayout
 import kotlinx.android.synthetic.main.activity_main.*
+import ru.appngo.snakeproject.SnakeCore.isPlay
 import ru.appngo.snakeproject.SnakeCore.startTheGame
 
 class MainActivity : AppCompatActivity() {
@@ -18,11 +19,20 @@ class MainActivity : AppCompatActivity() {
         head.layoutParams = LinearLayout.LayoutParams(100, 100)
         head.background = ContextCompat.getDrawable(this, R.drawable.circle)
         startTheGame()
+        SnakeCore.nextMove = { move(Directions.BOTTOM, head) }
 
         ivArrowUp.setOnClickListener { SnakeCore.nextMove = { move(Directions.UP, head) } }
         ivArrowBottom.setOnClickListener { SnakeCore.nextMove = { move(Directions.BOTTOM, head) } }
         ivArrowLeft.setOnClickListener { SnakeCore.nextMove = { move(Directions.LEFT, head) } }
         ivArrowRight.setOnClickListener { SnakeCore.nextMove = { move(Directions.RIGHT, head) } }
+        ivPause.setOnClickListener {
+            if (isPlay) {
+                ivPause.setImageResource(R.drawable.ic_play)
+            } else {
+                ivPause.setImageResource(R.drawable.ic_pause)
+            }
+            SnakeCore.isPlay = !isPlay
+        }
     }
 
     fun move(directions: Directions, head: View) {
