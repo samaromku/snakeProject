@@ -13,6 +13,8 @@ import ru.appngo.snakeproject.SnakeCore.startTheGame
 const val HEAD_SIZE = 100
 
 class MainActivity : AppCompatActivity() {
+
+    private val allTale = mutableListOf<PartOfTale>()
     private val human by lazy {
         ImageView(this)
     }
@@ -24,7 +26,9 @@ class MainActivity : AppCompatActivity() {
         val head = View(this)
         head.layoutParams = FrameLayout.LayoutParams(HEAD_SIZE, HEAD_SIZE)
         head.background = ContextCompat.getDrawable(this, R.drawable.circle)
+
         startTheGame()
+        generateNewHuman()
         SnakeCore.nextMove = { move(Directions.BOTTOM, head) }
 
         ivArrowUp.setOnClickListener { SnakeCore.nextMove = { move(Directions.UP, head) } }
@@ -42,22 +46,36 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun generateNewHuman() {
-        Thread(Runnable {
-            human.layoutParams = FrameLayout.LayoutParams(HEAD_SIZE, HEAD_SIZE)
-            human.setImageResource(R.drawable.ic_person)
-            (human.layoutParams as FrameLayout.LayoutParams).topMargin = (1..10).random() * HEAD_SIZE
-            (human.layoutParams as FrameLayout.LayoutParams).leftMargin = (1..10).random() * HEAD_SIZE
-            runOnUiThread {
-                container.addView(human)
-            }
-        }).start()
+        human.layoutParams = FrameLayout.LayoutParams(HEAD_SIZE, HEAD_SIZE)
+        human.setImageResource(R.drawable.ic_person)
+        (human.layoutParams as FrameLayout.LayoutParams).topMargin = (0..10).random() * HEAD_SIZE
+        (human.layoutParams as FrameLayout.LayoutParams).leftMargin = (0..10).random() * HEAD_SIZE
+        container.removeView(human)
+        container.addView(human)
     }
 
     private fun checkIfSnakeEatsPerson(head: View) {
         if (head.left == human.left && head.top == human.top) {
-            container.removeView(human)
             generateNewHuman()
+            addPartOfTale(head.top, head.left)
         }
+    }
+
+    private fun addPartOfTale(top: Int, left: Int) {
+        val talePart = drawPartOfTale(top, left)
+        allTale.add(PartOfTale(top, left, talePart))
+    }
+
+    private fun drawPartOfTale(top: Int, left: Int): ImageView {
+        val taleImage = ImageView(this)
+        taleImage.setImageResource(R.drawable.ic_person)
+        taleImage.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimary))
+        taleImage.layoutParams = FrameLayout.LayoutParams(HEAD_SIZE, HEAD_SIZE)
+        (taleImage.layoutParams as FrameLayout.LayoutParams).topMargin = top
+        (taleImage.layoutParams as FrameLayout.LayoutParams).leftMargin = left
+
+        container.addView(taleImage)
+        return taleImage
     }
 
     fun move(directions: Directions, head: View) {
@@ -68,11 +86,30 @@ class MainActivity : AppCompatActivity() {
             Directions.RIGHT -> (head.layoutParams as FrameLayout.LayoutParams).leftMargin += HEAD_SIZE
         }
         runOnUiThread {
+            makeTaleMove(head.top, head.left)
             checkIfSnakeEatsPerson(head)
             container.removeView(head)
             container.addView(head)
         }
 
+    }
+
+    private fun makeTaleMove(headTop: Int, headLeft: Int) {
+        var tempTalePart: PartOfTale? = null
+        for (index in 0 until allTale.size) {
+            val talePart = allTale[index]
+            container.removeView(talePart.imageView)
+            if (index == 0) {
+                tempTalePart = talePart
+                allTale[index] = PartOfTale(headTop, headLeft, drawPartOfTale(headTop, headLeft))
+            } else {
+                val anotherTempPartOfTale = allTale[index]
+                tempTalePart?.let {
+                    allTale[index] = PartOfTale(it.top, it.left, drawPartOfTale(it.top, it.left))
+                }
+                tempTalePart = anotherTempPartOfTale
+            }
+        }
     }
 }
 
