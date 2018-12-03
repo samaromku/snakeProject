@@ -3,15 +3,21 @@ package ru.appngo.snakeproject
 object SnakeCore {
     var nextMove: () -> Unit = {}
     var isPlay = true
+    private val thread: Thread
 
-    fun startTheGame() {
-        Thread(Runnable {
+    init {
+        thread = Thread(Runnable {
             while (true) {
                 Thread.sleep(500)
                 if (isPlay) {
                     nextMove()
                 }
             }
-        }).start()
+        })
+        thread.start()
+    }
+
+    fun startTheGame() {
+        isPlay = true
     }
 }

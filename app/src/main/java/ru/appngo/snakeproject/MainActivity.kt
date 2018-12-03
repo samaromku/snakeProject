@@ -2,15 +2,18 @@ package ru.appngo.snakeproject
 
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import kotlinx.android.synthetic.main.activity_main.*
 import ru.appngo.snakeproject.SnakeCore.isPlay
 import ru.appngo.snakeproject.SnakeCore.startTheGame
 
 const val HEAD_SIZE = 100
+const val CELLS_ON_FIELD = 10
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         val head = View(this)
         head.layoutParams = FrameLayout.LayoutParams(HEAD_SIZE, HEAD_SIZE)
         head.background = ContextCompat.getDrawable(this, R.drawable.circle)
+        container.layoutParams = LinearLayout.LayoutParams(HEAD_SIZE * CELLS_ON_FIELD, HEAD_SIZE * CELLS_ON_FIELD)
 
         startTheGame()
         generateNewHuman()
@@ -48,8 +52,8 @@ class MainActivity : AppCompatActivity() {
     private fun generateNewHuman() {
         human.layoutParams = FrameLayout.LayoutParams(HEAD_SIZE, HEAD_SIZE)
         human.setImageResource(R.drawable.ic_person)
-        (human.layoutParams as FrameLayout.LayoutParams).topMargin = (0..10).random() * HEAD_SIZE
-        (human.layoutParams as FrameLayout.LayoutParams).leftMargin = (0..10).random() * HEAD_SIZE
+        (human.layoutParams as FrameLayout.LayoutParams).topMargin = (0 until CELLS_ON_FIELD).random() * HEAD_SIZE
+        (human.layoutParams as FrameLayout.LayoutParams).leftMargin = (0 until CELLS_ON_FIELD).random() * HEAD_SIZE
         container.removeView(human)
         container.addView(human)
     }
@@ -86,12 +90,42 @@ class MainActivity : AppCompatActivity() {
             Directions.RIGHT -> (head.layoutParams as FrameLayout.LayoutParams).leftMargin += HEAD_SIZE
         }
         runOnUiThread {
+            if (checkIfSnakeSmash(head)) {
+                isPlay = false
+                showScore()
+                return@runOnUiThread
+            }
             makeTaleMove(head.top, head.left)
             checkIfSnakeEatsPerson(head)
             container.removeView(head)
             container.addView(head)
         }
+    }
 
+    private fun showScore() {
+        AlertDialog.Builder(this)
+                .setTitle("Your score: ${allTale.size} items")
+                .setPositiveButton("ok") { _, _ ->
+                    this.recreate()
+                }
+                .setCancelable(false)
+                .create()
+                .show()
+    }
+
+    private fun checkIfSnakeSmash(head: View): Boolean {
+        for (talePart in allTale) {
+            if (talePart.left == head.left && talePart.top == head.top) {
+                return true
+            }
+        }
+        if (head.top < 0
+            || head.left < 0
+            || head.top >= HEAD_SIZE * CELLS_ON_FIELD
+            || head.left >= HEAD_SIZE * CELLS_ON_FIELD) {
+            return true
+        }
+        return false
     }
 
     private fun makeTaleMove(headTop: Int, headLeft: Int) {
