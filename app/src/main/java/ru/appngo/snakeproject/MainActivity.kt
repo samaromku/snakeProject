@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import kotlinx.android.synthetic.main.activity_main.*
+import ru.appngo.snakeproject.SnakeCore.gameSpeed
 import ru.appngo.snakeproject.SnakeCore.isPlay
 import ru.appngo.snakeproject.SnakeCore.startTheGame
 
@@ -18,18 +19,24 @@ class MainActivity : AppCompatActivity() {
     private val allTale = mutableListOf<PartOfTale>()
     private var currentDirection: Directions = Directions.BOTTOM
     private val human by lazy {
-        ImageView(this)
+        ImageView(this).apply {
+            this.layoutParams = FrameLayout.LayoutParams(HEAD_SIZE, HEAD_SIZE)
+            this.setImageResource(R.drawable.ic_person)
+        }
     }
     private val head by lazy {
         ImageView(this)
+            .apply {
+                this.layoutParams = FrameLayout.LayoutParams(HEAD_SIZE, HEAD_SIZE)
+                this.setImageResource(R.drawable.snake_head)
+            }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        head.layoutParams = FrameLayout.LayoutParams(HEAD_SIZE, HEAD_SIZE)
-        head.setImageResource(R.drawable.snake_head)
+
         container.layoutParams = LinearLayout.LayoutParams(HEAD_SIZE * CELLS_ON_FIELD, HEAD_SIZE * CELLS_ON_FIELD)
 
         startTheGame()
@@ -67,24 +74,49 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun generateNewHuman() {
-        human.layoutParams = FrameLayout.LayoutParams(HEAD_SIZE, HEAD_SIZE)
-        human.setImageResource(R.drawable.ic_person)
-        (human.layoutParams as FrameLayout.LayoutParams).topMargin = (0 until CELLS_ON_FIELD).random() * HEAD_SIZE
-        (human.layoutParams as FrameLayout.LayoutParams).leftMargin = (0 until CELLS_ON_FIELD).random() * HEAD_SIZE
+        val viewCoordinate = generateHumanCoordinates()
+        (human.layoutParams as FrameLayout.LayoutParams).topMargin = viewCoordinate.top
+        (human.layoutParams as FrameLayout.LayoutParams).leftMargin = viewCoordinate.left
         container.removeView(human)
         container.addView(human)
+    }
+
+    private fun generateHumanCoordinates(): ViewCoordinate {
+        val viewCoordinate = ViewCoordinate(
+            (0 until CELLS_ON_FIELD).random() * HEAD_SIZE,
+            (0 until CELLS_ON_FIELD).random() * HEAD_SIZE
+        )
+        for (partTale in allTale) {
+            if (partTale.viewCoordinate == viewCoordinate) {
+                return generateHumanCoordinates()
+            }
+        }
+        if (head.top == viewCoordinate.top && head.left == viewCoordinate.left) {
+            return generateHumanCoordinates()
+        }
+        return viewCoordinate
     }
 
     private fun checkIfSnakeEatsPerson() {
         if (head.left == human.left && head.top == human.top) {
             generateNewHuman()
             addPartOfTale(head.top, head.left)
+            increaseDifficult()
+        }
+    }
+
+    private fun increaseDifficult() {
+        if (gameSpeed <= MINIMUM_GAME_SPEED) {
+            return
+        }
+        if (allTale.size % 5 == 0) {
+            gameSpeed -= 100
         }
     }
 
     private fun addPartOfTale(top: Int, left: Int) {
         val talePart = drawPartOfTale(top, left)
-        allTale.add(PartOfTale(top, left, talePart))
+        allTale.add(PartOfTale(ViewCoordinate(top, left), talePart))
     }
 
     private fun drawPartOfTale(top: Int, left: Int): ImageView {
@@ -152,7 +184,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkIfSnakeSmash(): Boolean {
         for (talePart in allTale) {
-            if (talePart.left == head.left && talePart.top == head.top) {
+            if (talePart.viewCoordinate.left == head.left && talePart.viewCoordinate.top == head.top) {
                 return true
             }
         }
@@ -173,11 +205,12 @@ class MainActivity : AppCompatActivity() {
             container.removeView(talePart.imageView)
             if (index == 0) {
                 tempTalePart = talePart
-                allTale[index] = PartOfTale(head.top, head.left, drawPartOfTale(head.top, head.left))
+                allTale[index] = PartOfTale(ViewCoordinate(head.top, head.left), drawPartOfTale(head.top, head.left))
             } else {
                 val anotherTempPartOfTale = allTale[index]
                 tempTalePart?.let {
-                    allTale[index] = PartOfTale(it.top, it.left, drawPartOfTale(it.top, it.left))
+                    allTale[index] =
+                            PartOfTale(it.viewCoordinate, drawPartOfTale(it.viewCoordinate.top, it.viewCoordinate.left))
                 }
                 tempTalePart = anotherTempPartOfTale
             }
